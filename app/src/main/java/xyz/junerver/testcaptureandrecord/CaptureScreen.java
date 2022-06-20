@@ -183,6 +183,7 @@ public class CaptureScreen {
                         Thread.sleep(1000 / mFramerate);
                     } catch (Exception e) {
                         // maxImages (3) has already been acquired, call #close before acquiring more.
+                        //停止截屏，释放资源，延时后立即重启截屏器
                         stop();
                         try {
                             Thread.sleep(200);
