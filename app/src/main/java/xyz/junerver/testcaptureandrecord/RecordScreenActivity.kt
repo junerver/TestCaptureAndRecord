@@ -21,6 +21,7 @@ const val MIME_TYPE = "video/avc"
 class RecordScreenActivity : AppCompatActivity() {
 
     private lateinit var mSvPreview: SurfaceView
+    //输出录屏使用的Surface
     lateinit var mOutputSurface: Surface
     private lateinit var holder: SurfaceHolder
     private lateinit var mBtnStartRecord: Button

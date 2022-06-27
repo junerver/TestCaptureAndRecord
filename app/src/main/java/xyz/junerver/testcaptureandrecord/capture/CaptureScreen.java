@@ -1,4 +1,4 @@
-package xyz.junerver.testcaptureandrecord;
+package xyz.junerver.testcaptureandrecord.capture;
 
 import android.app.Activity;
 import android.content.Context;
@@ -17,6 +17,10 @@ import android.util.Log;
 import android.view.WindowManager;
 
 import java.nio.ByteBuffer;
+
+import xyz.junerver.testcaptureandrecord.GlobalThreadPools;
+import xyz.junerver.testcaptureandrecord.LogUtils;
+import xyz.junerver.testcaptureandrecord.OnBitmapAvailableListener;
 
 /**
  * 截图器

@@ -8,12 +8,13 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import xyz.junerver.testcaptureandrecord.capture.CaptureScreen
 
 class MainActivity : AppCompatActivity() {
     lateinit var mIvPreview:ImageView
     lateinit var mBtnStartCapture:Button
     lateinit var mBtnStopCapture:Button
-    lateinit var captureScreen:CaptureScreen
+    lateinit var captureScreen: CaptureScreen
 
     lateinit var captureIntent: Intent
     override fun onCreate(savedInstanceState: Bundle?) {

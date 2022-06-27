@@ -10,7 +10,7 @@ import android.util.Log;
  * Email: junerver@gmail.com
  * Version: v1.0
  */
-class LogUtils {
+public class LogUtils {
     private static final String TAG = "CaptureScreen";
     public static void d( String msg) {
         Log.d(TAG, msg);
