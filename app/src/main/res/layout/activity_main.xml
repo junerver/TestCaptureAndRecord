@@ -41,4 +41,16 @@
         app:layout_constraintTop_toBottomOf="@+id/btn_start_capture"
         app:layout_constraintVertical_bias="0.33" />
 
+    <Button
+        android:id="@+id/btn_jump_to_record_screen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="前往录屏"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_stop_capture"
+        app:layout_constraintVertical_bias="0.123" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
