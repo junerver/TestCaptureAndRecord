@@ -61,13 +61,20 @@ class RecordWithServerActivity : AppCompatActivity() {
         RecordService.init(GlobalConfig.requestCode,GlobalConfig.intent!!)
         lifecycleScope.launch {
             RecordService.h264DataFlow.collect{
-                val i: Int = (it[4] and 0x1f).toInt()
-                //7 代表i帧
-                if (i == 7) {
-                    LogUtils.d("收到i帧信息：$i")
-                    hasI = true
-                }
-                if (mOutputSurface.isValid && hasI) {
+//                找到开始码之后，使用开始码之后的第一个字节的低 5 位判断
+//                type &0x1f==0x7表示这个nalu是sps， 序列参数集 SPS----7
+//                type &0x1f==0x8表示是pps。 图像参数集 PPS----8：
+//                5 表示IDR图像中的片 即 I帧
+//                P帧 ----1：
+//                https://zhuanlan.zhihu.com/p/281176576
+
+//                val i: Int = (it[4] and 0x1f).toInt()
+//                //7 代表i帧
+//                if (i == 7) {
+//                    LogUtils.d("收到i帧信息：$i")
+//                    hasI = true
+//                }
+                if (mOutputSurface.isValid) {
                     decodeVideo(it)
                 }
             }

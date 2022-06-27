@@ -10,11 +10,11 @@ import java.util.*
  * Version: v1.0
  */
 
-fun setInterval(interval: Long, block: () -> Unit) {
+fun setInterval(interval: Long,delay:Long = 0, block: () -> Unit) {
     val timer = Timer()
     timer.schedule(object : TimerTask() {
         override fun run() {
             block()
         }
-    }, 0, interval)
+    }, delay, interval)
 }

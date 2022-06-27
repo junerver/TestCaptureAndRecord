@@ -5,7 +5,6 @@ import android.content.Intent
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.MediaCodec
-import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
@@ -19,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import xyz.junerver.testcaptureandrecord.*
+import kotlin.experimental.and
 
 class RecordService : LifecycleService() {
 
@@ -96,9 +96,12 @@ class RecordService : LifecycleService() {
         isRun = false
     }
 
+    var h264SpsPpsData: ByteArray? = null
+
     private fun startRecord() {
         isRun = true
-        //每隔1秒请求一次关键帧 I帧
+        //方法1：正常发送I帧 P帧，但是每隔1秒强制请求一次关键帧 I帧，
+        // 优点是更加流畅，明显比融合的流更流畅
         setInterval(1000) {
             if (isRun) {
                 val params = Bundle()
@@ -114,6 +117,21 @@ class RecordService : LifecycleService() {
                     mBufferInfo,
                     timeoutUs
                 )
+                if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
+                    LogUtils.d("输出格式变化")
+                    val format: MediaFormat = mMediaCodecEncoder.outputFormat
+                    var byteBuffer = format.getByteBuffer("csd-0")
+                    val sps = ByteArray(byteBuffer?.capacity()!!)
+                    byteBuffer.get(sps)
+                    byteBuffer = format.getByteBuffer("csd-1")
+                    val pps = ByteArray(byteBuffer?.capacity()!!)
+                    byteBuffer?.get(pps)
+                    //拼接sps和pps
+                    val spsPps = ByteArray(sps.size + pps.size)
+                    System.arraycopy(sps, 0, spsPps, 0, sps.size)
+                    System.arraycopy(pps, 0, spsPps, sps.size, pps.size)
+                    h264SpsPpsData = spsPps
+                }
                 if (outputBufferIndex >= 0) {
                     val outputBuffer = mMediaCodecEncoder.getOutputBuffer(outputBufferIndex)
                     outputBuffer?.position(mBufferInfo.offset)
@@ -124,6 +142,14 @@ class RecordService : LifecycleService() {
 //                    LogUtils.d("视频数据：${chunk.size}")
                     //播放视频数据
                     if (chunk.isNotEmpty()) {
+//                      //方法2：融合sps和pps，配合format中的每隔1秒请求一次关键帧 I帧
+//                        if ((chunk[4] and 0x1f).toInt() ==5){
+//                            LogUtils.d("关键帧数据处理")
+//                            lifecycleScope.launch {
+//                                h264SpsPpsData?.let { h264DataFlow.emit(it) }
+//                            }
+//                        }
+
                         //flow 与 回调各给一份 爱咋用咋用
                         lifecycleScope.launch {
                             h264DataFlow.emit(chunk)
