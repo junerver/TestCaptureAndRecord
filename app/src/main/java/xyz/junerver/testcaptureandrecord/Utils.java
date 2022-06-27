@@ -48,7 +48,7 @@ class Utils {
      * @return [ true, 有权限 ][ false, 无权限 ]
      */
     public static boolean checkPermission(Context context) {
-        Boolean hasPermission = false;
+        boolean hasPermission = false;
         if (Build.VERSION.SDK_INT < 19) {
             hasPermission = true;
         } else if (Build.VERSION.SDK_INT >= 19 && Build.VERSION.SDK_INT < 23) {

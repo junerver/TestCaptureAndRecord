@@ -56,6 +56,8 @@ public class CaptureScreen {
     private Bitmap mBlackBitmap;
     @SuppressWarnings("unused")
     private int mScreenState = NORMAL_STATE;
+
+    //截图获取到数据后的回调
     private OnBitmapAvailableListener mListener;
 
     /**

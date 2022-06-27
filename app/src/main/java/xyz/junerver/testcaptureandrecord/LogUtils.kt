@@ -1,6 +1,7 @@
-package xyz.junerver.testcaptureandrecord;
+package xyz.junerver.testcaptureandrecord
 
-import android.util.Log;
+import android.util.Log
+import xyz.junerver.testcaptureandrecord.LogUtils
 
 /**
  * Description:
@@ -10,13 +11,15 @@ import android.util.Log;
  * Email: junerver@gmail.com
  * Version: v1.0
  */
-public class LogUtils {
-    private static final String TAG = "CaptureScreen";
-    public static void d( String msg) {
-        Log.d(TAG, msg);
+object LogUtils {
+    private const val TAG = "CaptureScreen"
+    @JvmStatic
+    fun d(msg: String?) {
+        Log.d(TAG, msg!!)
     }
 
-    public static void e( String msg) {
-        Log.e(TAG, msg);
+    @JvmStatic
+    fun e(msg: String?) {
+        Log.e(TAG, msg!!)
     }
 }

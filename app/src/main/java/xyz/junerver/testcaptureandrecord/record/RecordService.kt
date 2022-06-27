@@ -55,7 +55,7 @@ class RecordService : LifecycleService() {
             ).apply {
                 mediaProjection = this
             }
-        }?:run{
+        } ?: run {
             LogUtils.e("RecordService intent is null")
             return
         }
@@ -96,7 +96,7 @@ class RecordService : LifecycleService() {
         isRun = false
     }
 
-    var h264SpsPpsData: ByteArray? = null
+    private var h264SpsPpsData: ByteArray? = null
 
     private fun startRecord() {
         isRun = true
@@ -117,7 +117,7 @@ class RecordService : LifecycleService() {
                     mBufferInfo,
                     timeoutUs
                 )
-                if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
+                if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                     LogUtils.d("输出格式变化")
                     val format: MediaFormat = mMediaCodecEncoder.outputFormat
                     var byteBuffer = format.getByteBuffer("csd-0")
@@ -142,8 +142,8 @@ class RecordService : LifecycleService() {
 //                    LogUtils.d("视频数据：${chunk.size}")
                     //播放视频数据
                     if (chunk.isNotEmpty()) {
-//                      //方法2：融合sps和pps，配合format中的每隔1秒请求一次关键帧 I帧
-//                        if ((chunk[4] and 0x1f).toInt() ==5){
+                        //方法2：融合sps和pps，配合format中的每隔1秒请求一次关键帧 I帧
+//                        if ((chunk[4] and 0x1f).toInt() == 5) {
 //                            LogUtils.d("关键帧数据处理")
 //                            lifecycleScope.launch {
 //                                h264SpsPpsData?.let { h264DataFlow.emit(it) }

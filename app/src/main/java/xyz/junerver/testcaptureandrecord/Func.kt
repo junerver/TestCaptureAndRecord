@@ -18,3 +18,12 @@ fun setInterval(interval: Long,delay:Long = 0, block: () -> Unit) {
         }
     }, delay, interval)
 }
+
+fun setTimeout(timeout: Long, block: () -> Unit) {
+    val timer = Timer()
+    timer.schedule(object : TimerTask() {
+        override fun run() {
+            block()
+        }
+    }, timeout)
+}

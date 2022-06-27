@@ -14,7 +14,13 @@ import xyz.junerver.testcaptureandrecord.LogUtils
 import xyz.junerver.testcaptureandrecord.MIME_TYPE
 import xyz.junerver.testcaptureandrecord.R
 import kotlin.experimental.and
-
+/**
+* Description: 抽离了录屏服务到server中
+* @author Junerver
+* @date: 2022/6/27-16:59
+* @Email: junerver@gmail.com
+* @Version: v1.0
+*/
 class RecordWithServerActivity : AppCompatActivity() {
 
     private lateinit var mSvPreview: SurfaceView
@@ -68,12 +74,14 @@ class RecordWithServerActivity : AppCompatActivity() {
 //                P帧 ----1：
 //                https://zhuanlan.zhihu.com/p/281176576
 
-//                val i: Int = (it[4] and 0x1f).toInt()
-//                //7 代表i帧
-//                if (i == 7) {
-//                    LogUtils.d("收到i帧信息：$i")
-//                    hasI = true
-//                }
+                val frame = when((it[4] and 0x1f).toInt()){
+                    7 -> "SPS"
+                    8 -> "PPS"
+                    5 -> "I"
+                    1 -> "P"
+                    else -> "other"
+                }
+                LogUtils.d("收到i帧信息：$frame")
                 if (mOutputSurface.isValid) {
                     decodeVideo(it)
                 }

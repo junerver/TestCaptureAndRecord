@@ -18,6 +18,14 @@ import androidx.appcompat.app.AppCompatActivity
 
 // H.264编码格式
 const val MIME_TYPE = "video/avc"
+
+/**
+* Description: 录屏与播放混合在一起
+* @author Junerver
+* @date: 2022/6/27-17:00
+* @Email: junerver@gmail.com
+* @Version: v1.0
+*/
 class RecordScreenActivity : AppCompatActivity() {
 
     private lateinit var mSvPreview: SurfaceView
