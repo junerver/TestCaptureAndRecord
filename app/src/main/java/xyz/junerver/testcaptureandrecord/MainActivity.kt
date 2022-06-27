@@ -33,6 +33,10 @@ class MainActivity : AppCompatActivity() {
             captureScreen.stop()
         }
 
+        findViewById<Button>(R.id.btn_jump_to_record_screen).setOnClickListener {
+            startActivity(Intent(this, RecordScreenActivity::class.java))
+        }
+
 
         //绝对不要放到resume
         if(Utils.checkPermission(this)){
@@ -72,8 +76,8 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if(requestCode == Utils.REQUEST_MEDIA_PROJECTION){
             if(resultCode == Activity.RESULT_OK){
-                captureIntent =data!!
-                captureScreen = CaptureScreen.getInstance(this,captureIntent)
+                GlobalConfig.intent =data!!
+                captureScreen = CaptureScreen.getInstance(this,GlobalConfig.intent)
             }
         }
     }
