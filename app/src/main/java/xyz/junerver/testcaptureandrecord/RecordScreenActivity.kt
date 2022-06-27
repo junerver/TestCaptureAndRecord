@@ -29,24 +29,19 @@ class RecordScreenActivity : AppCompatActivity() {
 
     //媒体投影
     private var mediaProjection: MediaProjection? = null
-
     private var virtualDisplay: VirtualDisplay? = null
-
     //录屏使用的由MediaCodec创建的surface，用于创建虚拟屏幕
     private var surface: Surface? = null
-
     //视频编码器
     private lateinit var mMediaCodecEncoder: MediaCodec
+    @Volatile
+    private var isRun = true //用于控制 是否录制，这个无关紧要
+
     //视频解码器
     private lateinit var mMediaCodecDecoder: MediaCodec
     //视频解码器的输入缓冲区
     private val mDecoderOutputBufferInfo = MediaCodec.BufferInfo()
 
-
-
-
-    @Volatile
-    private var isRun = true //用于控制 是否录制，这个无关紧要
 
     private lateinit var mContext: Context
 

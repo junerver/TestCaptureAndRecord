@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import xyz.junerver.testcaptureandrecord.capture.CaptureScreen
+import xyz.junerver.testcaptureandrecord.record.RecordWithServerActivity
 
 class MainActivity : AppCompatActivity() {
     lateinit var mIvPreview:ImageView
@@ -35,7 +36,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btn_jump_to_record_screen).setOnClickListener {
-            startActivity(Intent(this, RecordScreenActivity::class.java))
+//            startActivity(Intent(this, RecordScreenActivity::class.java))
+            startActivity(Intent(this, RecordWithServerActivity::class.java))
         }
 
 

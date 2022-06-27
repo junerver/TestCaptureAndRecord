@@ -9,6 +9,7 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.os.Bundle
 import android.os.IBinder
 import android.view.Surface
 import android.widget.Toast
@@ -17,10 +18,7 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
-import xyz.junerver.testcaptureandrecord.GlobalConfig
-import xyz.junerver.testcaptureandrecord.GlobalThreadPools
-import xyz.junerver.testcaptureandrecord.LogUtils
-import xyz.junerver.testcaptureandrecord.MIME_TYPE
+import xyz.junerver.testcaptureandrecord.*
 
 class RecordService : LifecycleService() {
 
@@ -50,16 +48,31 @@ class RecordService : LifecycleService() {
 
     override fun onCreate() {
         super.onCreate()
-        (this.getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager).getMediaProjection(
-            AppCompatActivity.RESULT_OK,
-            GlobalConfig.intent!!
-        ).apply {
-            mediaProjection = this
+        GlobalConfig.intent?.let {
+            (this.getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager).getMediaProjection(
+                AppCompatActivity.RESULT_OK,
+                it
+            ).apply {
+                mediaProjection = this
+            }
+        }?:run{
+            LogUtils.e("RecordService intent is null")
+            return
         }
 
         mMediaCodecEncoder = MediaCodec.createEncoderByType(MIME_TYPE)
         val codecName = mMediaCodecEncoder.codecInfo.name
-        val mediaFormat = getMediaFormat()
+        // TODO: 可能会出现没有关键帧的问题
+        /**
+         *
+         * 	timeStamp = System.currentTimeMillis();
+         * 	if (Build.VERSION.SDK_INT >= 23) {
+         * 		Bundle params = new Bundle();
+         * 		params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
+         * 		mMediaCodec.setParameters(params);
+         * 	}
+         */
+        val mediaFormat = GlobalConfig.getMediaFormat()
         mMediaCodecEncoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
         surface = mMediaCodecEncoder.createInputSurface()
         LogUtils.d("使用编码器类型：$codecName")
@@ -85,6 +98,14 @@ class RecordService : LifecycleService() {
 
     private fun startRecord() {
         isRun = true
+        //每隔1秒请求一次关键帧 I帧
+        setInterval(1000) {
+            if (isRun) {
+                val params = Bundle()
+                params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
+                mMediaCodecEncoder.setParameters(params)
+            }
+        }
         GlobalThreadPools.instance?.execute {
             val timeoutUs: Long = -1
             val mBufferInfo = MediaCodec.BufferInfo()
@@ -100,7 +121,7 @@ class RecordService : LifecycleService() {
                     val chunk = ByteArray(mBufferInfo.size)
                     outputBuffer?.get(chunk)
                     mMediaCodecEncoder.releaseOutputBuffer(outputBufferIndex, false)
-                    LogUtils.d("视频数据：${chunk.size}")
+//                    LogUtils.d("视频数据：${chunk.size}")
                     //播放视频数据
                     if (chunk.isNotEmpty()) {
                         //flow 与 回调各给一份 爱咋用咋用
@@ -141,25 +162,6 @@ class RecordService : LifecycleService() {
         }
     }
 
-    //获得视频格式，编码解码都需要使用
-    private fun getMediaFormat(): MediaFormat {
-        val mediaFormat = MediaFormat.createVideoFormat(MIME_TYPE, 720, 1280)
-        //比特率
-        mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 409600)
-        //必须设置25左右大小,才能对修改码率生效,其他值无效
-        mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 25)
-        //固定码率
-        mediaFormat.setInteger(
-            MediaFormat.KEY_BITRATE_MODE,
-            MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-        )
-        mediaFormat.setInteger(
-            MediaFormat.KEY_COLOR_FORMAT,
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
-        )
-        mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
-        return mediaFormat
-    }
 
     companion object {
         private const val ACTION_START = "xyz.junerver.testcaptureandrecord.record.ACTION_START"
@@ -171,6 +173,7 @@ class RecordService : LifecycleService() {
         //流数据的Flow
         val h264DataFlow = MutableSharedFlow<ByteArray>()
 
+        //发送开启录屏服务
         fun start(context: android.content.Context) {
             val intent = Intent(context, RecordService::class.java)
             intent.action = ACTION_START
