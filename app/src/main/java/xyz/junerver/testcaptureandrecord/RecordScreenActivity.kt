@@ -6,7 +6,6 @@ import android.hardware.display.VirtualDisplay
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import android.media.MediaRecorder
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
@@ -17,35 +16,32 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
-
+// H.264编码格式
+const val MIME_TYPE = "video/avc"
 class RecordScreenActivity : AppCompatActivity() {
 
-    lateinit var mSvPreview: SurfaceView
+    private lateinit var mSvPreview: SurfaceView
     lateinit var mOutputSurface: Surface
     private lateinit var holder: SurfaceHolder
-    lateinit var mBtnStartRecord: Button
-    lateinit var mBtnStopRecord: Button
+    private lateinit var mBtnStartRecord: Button
+    private lateinit var mBtnStopRecord: Button
 
     //媒体投影
     private var mediaProjection: MediaProjection? = null
 
-    //录制文件使用的
-    private var mediaRecorder: MediaRecorder? = null
     private var virtualDisplay: VirtualDisplay? = null
 
     //录屏使用的由MediaCodec创建的surface，用于创建虚拟屏幕
     private var surface: Surface? = null
 
     //视频编码器
-    private var mMediaCodecEncoder: MediaCodec? = null
-
+    private lateinit var mMediaCodecEncoder: MediaCodec
     //视频解码器
-    private var mMediaCodecDecoder: MediaCodec? = null
-
+    private lateinit var mMediaCodecDecoder: MediaCodec
     //视频解码器的输入缓冲区
     private val mDecoderOutputBufferInfo = MediaCodec.BufferInfo()
 
-    private val MIME_TYPE = "video/avc" // H.264 Advanced Video
+
 
 
     @Volatile
@@ -99,13 +95,13 @@ class RecordScreenActivity : AppCompatActivity() {
         }
 
         mMediaCodecEncoder = MediaCodec.createEncoderByType(MIME_TYPE)
-        val codecName = mMediaCodecEncoder?.codecInfo?.name
+        val codecName = mMediaCodecEncoder.codecInfo.name
         val mediaFormat = getMediaFormat()
-        mMediaCodecEncoder?.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        surface = mMediaCodecEncoder?.createInputSurface()
+        mMediaCodecEncoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+        surface = mMediaCodecEncoder.createInputSurface()
         LogUtils.d("使用编码器类型：$codecName")
         createVirtualDisplay()
-        mMediaCodecEncoder?.start()
+        mMediaCodecEncoder.start()
     }
 
     //创建虚拟屏幕
@@ -136,8 +132,8 @@ class RecordScreenActivity : AppCompatActivity() {
         LogUtils.d("initDecoder")
         mMediaCodecDecoder = MediaCodec.createDecoderByType(MIME_TYPE)
         val mediaFormat = getMediaFormat()
-        mMediaCodecDecoder!!.configure(mediaFormat, mOutputSurface, null, 0)
-        mMediaCodecDecoder!!.start()
+        mMediaCodecDecoder.configure(mediaFormat, mOutputSurface, null, 0)
+        mMediaCodecDecoder.start()
     }
 
     //开始录屏
@@ -147,17 +143,17 @@ class RecordScreenActivity : AppCompatActivity() {
             val timeoutUs: Long = -1
             val mBufferInfo = MediaCodec.BufferInfo()
             while (isRun) {
-                val outputBufferIndex = mMediaCodecEncoder?.dequeueOutputBuffer(
+                val outputBufferIndex = mMediaCodecEncoder.dequeueOutputBuffer(
                     mBufferInfo,
                     timeoutUs
-                ) ?: -1
+                )
                 if (outputBufferIndex >= 0) {
-                    val outputBuffer = mMediaCodecEncoder?.getOutputBuffer(outputBufferIndex)
+                    val outputBuffer = mMediaCodecEncoder.getOutputBuffer(outputBufferIndex)
                     outputBuffer?.position(mBufferInfo.offset)
                     outputBuffer?.limit(mBufferInfo.offset + mBufferInfo.size)
                     val chunk = ByteArray(mBufferInfo.size)
                     outputBuffer?.get(chunk)
-                    mMediaCodecEncoder?.releaseOutputBuffer(outputBufferIndex, false)
+                    mMediaCodecEncoder.releaseOutputBuffer(outputBufferIndex, false)
                     LogUtils.d("视频数据：${chunk.size}")
                     //播放视频数据
                     decodeVideo(chunk)
@@ -174,32 +170,34 @@ class RecordScreenActivity : AppCompatActivity() {
     //解码视频数据
     private fun decodeVideo(chunk: ByteArray) {
         LogUtils.d("解码视频数据 ${chunk.size}")
-        val inputBufferIndex = mMediaCodecDecoder?.dequeueInputBuffer(100_000) ?: -1
+        //出队输入缓冲区索引
+        val inputBufferIndex = mMediaCodecDecoder.dequeueInputBuffer(100_000)
         LogUtils.d("解码视频数据 inputBufferIndex $inputBufferIndex")
-        //当输入缓冲区有效时,就是>=0
+        //当输入缓冲区有效时,就是索引值>=0
         if (inputBufferIndex >= 0) {
-            val inputBuffer = mMediaCodecDecoder?.getInputBuffer(inputBufferIndex)
+            //从解码器中获取输入缓冲区
+            val inputBuffer = mMediaCodecDecoder.getInputBuffer(inputBufferIndex)
             inputBuffer?.clear()
             //往输入缓冲区写入数据,关键点
             inputBuffer?.put(chunk)
-            mMediaCodecDecoder?.queueInputBuffer(inputBufferIndex, 0, chunk.size, 0, 0)
-
+            //把数据传递给解码器进行解码
+            mMediaCodecDecoder.queueInputBuffer(inputBufferIndex, 0, chunk.size, 0, 0)
             //拿到输出缓冲区的索引
-            var outputBufferIndex = mMediaCodecDecoder?.dequeueOutputBuffer(
+            var outputBufferIndex = mMediaCodecDecoder.dequeueOutputBuffer(
                 mDecoderOutputBufferInfo,
                 100_000
-            ) ?: -1
-            LogUtils.d("解码视频数据 outputBufferIndex $outputBufferIndex")
+            )
+            //输出缓冲区有效
             while (outputBufferIndex >= 0) {
                 LogUtils.d("surface 写入数据： ${mOutputSurface.isValid}")
                 if (mOutputSurface.isValid) {
-                    LogUtils.d("刷新数据渲染 surface")
-                    mMediaCodecDecoder?.releaseOutputBuffer(outputBufferIndex, true)
+                    //releaseOutputBuffer方法的第二个参数为true，表示解码完成后释放输出缓冲区。
+                    mMediaCodecDecoder.releaseOutputBuffer(outputBufferIndex, true)
                 }
-                outputBufferIndex = mMediaCodecDecoder?.dequeueOutputBuffer(
+                outputBufferIndex = mMediaCodecDecoder.dequeueOutputBuffer(
                     mDecoderOutputBufferInfo,
                     0
-                ) ?: -1
+                )
             }
         }
     }
