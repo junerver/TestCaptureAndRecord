@@ -8,6 +8,7 @@ import android.view.SurfaceView
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import xyz.junerver.testcaptureandrecord.GlobalConfig
 import xyz.junerver.testcaptureandrecord.LogUtils
@@ -66,7 +67,8 @@ class RecordWithServerActivity : AppCompatActivity() {
 
         RecordService.init(GlobalConfig.requestCode,GlobalConfig.intent!!)
         lifecycleScope.launch {
-            RecordService.h264DataFlow.collect{
+            launch(Dispatchers.IO) {
+                RecordService.h264DataFlow.collect{
 //                找到开始码之后，使用开始码之后的第一个字节的低 5 位判断
 //                type &0x1f==0x7表示这个nalu是sps， 序列参数集 SPS----7
 //                type &0x1f==0x8表示是pps。 图像参数集 PPS----8：
@@ -74,16 +76,17 @@ class RecordWithServerActivity : AppCompatActivity() {
 //                P帧 ----1：
 //                https://zhuanlan.zhihu.com/p/281176576
 
-                val frame = when((it[4] and 0x1f).toInt()){
-                    7 -> "SPS"
-                    8 -> "PPS"
-                    5 -> "I"
-                    1 -> "P"
-                    else -> "other"
-                }
-                LogUtils.d("收到i帧信息：$frame")
-                if (mOutputSurface.isValid) {
-                    decodeVideo(it)
+                    val frame = when((it[4] and 0x1f).toInt()){
+                        7 -> "SPS"
+                        8 -> "PPS"
+                        5 -> "I"
+                        1 -> "P"
+                        else -> "other"
+                    }
+                    LogUtils.d("收到i帧信息：$frame")
+                    if (mOutputSurface.isValid) {
+                        decodeVideo(it)
+                    }
                 }
             }
         }
