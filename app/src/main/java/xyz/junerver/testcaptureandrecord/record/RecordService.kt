@@ -62,16 +62,6 @@ class RecordService : LifecycleService() {
 
         mMediaCodecEncoder = MediaCodec.createEncoderByType(MIME_TYPE)
         val codecName = mMediaCodecEncoder.codecInfo.name
-        // TODO: 可能会出现没有关键帧的问题
-        /**
-         *
-         * 	timeStamp = System.currentTimeMillis();
-         * 	if (Build.VERSION.SDK_INT >= 23) {
-         * 		Bundle params = new Bundle();
-         * 		params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
-         * 		mMediaCodec.setParameters(params);
-         * 	}
-         */
         val mediaFormat = GlobalConfig.getMediaFormat()
         mMediaCodecEncoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
         surface = mMediaCodecEncoder.createInputSurface()
@@ -101,14 +91,13 @@ class RecordService : LifecycleService() {
     private fun startRecord() {
         isRun = true
         //方法1：正常发送I帧 P帧，但是每隔1秒强制请求一次关键帧 I帧，
-        // 优点是更加流畅，明显比融合的流更流畅
-        setInterval(1000) {
-            if (isRun) {
-                val params = Bundle()
-                params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
-                mMediaCodecEncoder.setParameters(params)
-            }
-        }
+//        setInterval(1000,1000) {
+//            if (isRun) {
+//                val params = Bundle()
+//                params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
+//                mMediaCodecEncoder.setParameters(params)
+//            }
+//        }
         GlobalThreadPools.instance?.execute {
             val timeoutUs: Long = -1
             val mBufferInfo = MediaCodec.BufferInfo()
@@ -143,12 +132,12 @@ class RecordService : LifecycleService() {
                     //播放视频数据
                     if (chunk.isNotEmpty()) {
                         //方法2：融合sps和pps，配合format中的每隔1秒请求一次关键帧 I帧
-//                        if ((chunk[4] and 0x1f).toInt() == 5) {
-//                            LogUtils.d("关键帧数据处理")
-//                            lifecycleScope.launch {
-//                                h264SpsPpsData?.let { h264DataFlow.emit(it) }
-//                            }
-//                        }
+                        if ((chunk[4] and 0x1f).toInt() == 5) {
+                            LogUtils.d("关键帧数据处理")
+                            lifecycleScope.launch {
+                                h264SpsPpsData?.let { h264DataFlow.emit(it) }
+                            }
+                        }
 
                         //flow 与 回调各给一份 爱咋用咋用
                         lifecycleScope.launch {

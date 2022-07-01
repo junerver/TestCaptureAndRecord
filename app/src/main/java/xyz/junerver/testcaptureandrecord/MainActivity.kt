@@ -37,44 +37,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btn_jump_to_record_screen).setOnClickListener {
+            //录屏与显示都在一个activity中
 //            startActivity(Intent(this, RecordScreenActivity::class.java))
+            //录屏抽离到services中
             startActivity(Intent(this, RecordWithServerActivity::class.java))
         }
 
-
-        //绝对不要放到resume
-        if (Utils.checkPermission(this)) {
-//            有权限请求
-            Utils.createPermission(this);
-        } else {
-            //无权限 去授权
-            showDialogTipUserGoToAppSettings(this)
-        }
+        //申请录屏权限
+        Utils.createPermission(this)
     }
 
-
-    /**
-     * 申请悬浮窗权限
-     */
-    private fun showDialogTipUserGoToAppSettings(activity: Activity) {
-        val runnable = Runnable {
-            val builder: AlertDialog.Builder = AlertDialog.Builder(activity)
-                .setCancelable(false)
-                .setTitle("申请悬浮窗权限")
-                .setMessage("请前往应用设置中，允许悬浮窗（在其他应用的上层显示）权限")
-                .setPositiveButton("前往", DialogInterface.OnClickListener { dialog, which ->
-                    Utils.goToAppSetting(activity)
-                    if (Utils.isHuaWeiHD(activity)) {
-                        activity.finish()
-                    }
-                })
-            if (!activity.isFinishing) {
-                builder.show()
-            }
-        }
-        //handler 延迟执行，避免在onCreate中执行
-        Handler(Looper.getMainLooper()).postDelayed(runnable, 300)
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
