@@ -10,10 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import xyz.junerver.testcaptureandrecord.GlobalConfig
-import xyz.junerver.testcaptureandrecord.LogUtils
-import xyz.junerver.testcaptureandrecord.MIME_TYPE
-import xyz.junerver.testcaptureandrecord.R
+import xyz.junerver.testcaptureandrecord.*
 import kotlin.experimental.and
 /**
 * Description: 抽离了录屏服务到server中
@@ -65,10 +62,10 @@ class RecordWithServerActivity : AppCompatActivity() {
         mBtnStopRecord = findViewById(R.id.btn_stop_record)
 
 
-        RecordService.init(GlobalConfig.requestCode,GlobalConfig.intent!!)
+        RecordService.init(GlobalConfig.resultCode,GlobalConfig.intent!!)
         lifecycleScope.launch {
             launch(Dispatchers.IO) {
-                RecordService.h264DataFlow.collect{
+                RecordService.sH264DataFlow.collect{
 //                找到开始码之后，使用开始码之后的第一个字节的低 5 位判断
 //                type &0x1f==0x7表示这个nalu是sps， 序列参数集 SPS----7
 //                type &0x1f==0x8表示是pps。 图像参数集 PPS----8：
@@ -111,7 +108,7 @@ class RecordWithServerActivity : AppCompatActivity() {
     private fun initMediaDecoder() {
         LogUtils.d("initDecoder")
         mMediaCodecDecoder = MediaCodec.createDecoderByType(MIME_TYPE)
-        val mediaFormat = GlobalConfig.getMediaFormat()
+        val mediaFormat = Utils.getMediaFormat()
         mMediaCodecDecoder.configure(mediaFormat, mOutputSurface, null, 0)
         mMediaCodecDecoder.start()
     }
