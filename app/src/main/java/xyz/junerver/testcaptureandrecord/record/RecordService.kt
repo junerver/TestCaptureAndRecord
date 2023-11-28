@@ -79,12 +79,8 @@ class RecordService : LifecycleService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_START -> {
-                startRecord()
-            }
-            ACTION_STOP -> {
-                stopRecord()
-            }
+            ACTION_START -> startRecord()
+            ACTION_STOP -> stopRecord()
         }
         return super.onStartCommand(intent, flags, startId)
     }
