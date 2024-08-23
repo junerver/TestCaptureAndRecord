@@ -15,20 +15,23 @@ import android.view.SurfaceView
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import xyz.junerver.testcaptureandrecord.utils.BrocastUtil
+import xyz.junerver.testcaptureandrecord.utils.LogUtils
 
 // H.264编码格式
 const val MIME_TYPE = "video/avc"
 
 /**
-* Description: 录屏与播放混合在一起
-* @author Junerver
-* @date: 2022/6/27-17:00
-* @Email: junerver@gmail.com
-* @Version: v1.0
-*/
+ * Description: 录屏与播放混合在一起
+ * @author Junerver
+ * @date: 2022/6/27-17:00
+ * @Email: junerver@gmail.com
+ * @Version: v1.0
+ */
 class RecordScreenActivity : AppCompatActivity() {
 
     private lateinit var mSvPreview: SurfaceView
+
     //输出录屏使用的Surface
     lateinit var mOutputSurface: Surface
     private lateinit var holder: SurfaceHolder
@@ -38,15 +41,19 @@ class RecordScreenActivity : AppCompatActivity() {
     //媒体投影
     private var mediaProjection: MediaProjection? = null
     private var virtualDisplay: VirtualDisplay? = null
+
     //录屏使用的由MediaCodec创建的surface，用于创建虚拟屏幕
     private var surface: Surface? = null
+
     //视频编码器
     private lateinit var mMediaCodecEncoder: MediaCodec
+
     @Volatile
     private var isRun = true //用于控制 是否录制，这个无关紧要
 
     //视频解码器
     private lateinit var mMediaCodecDecoder: MediaCodec
+
     //视频解码器的输入缓冲区
     private val mDecoderOutputBufferInfo = MediaCodec.BufferInfo()
 
@@ -173,7 +180,10 @@ class RecordScreenActivity : AppCompatActivity() {
 
     //解码视频数据
     private fun decodeVideo(chunk: ByteArray) {
-        LogUtils.d("解码视频数据 ${chunk.size}")
+        LogUtils.d(
+            "解码视频数据 ${chunk.size} " +
+                    "\nisAvcEncodedBlock:${BrocastUtil.isAvcEncodedBlock(chunk)}"
+        )
         //出队输入缓冲区索引
         val inputBufferIndex = mMediaCodecDecoder.dequeueInputBuffer(100_000)
         LogUtils.d("解码视频数据 inputBufferIndex $inputBufferIndex")
@@ -225,4 +235,8 @@ class RecordScreenActivity : AppCompatActivity() {
         mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
         return mediaFormat
     }
+
+
+
+
 }

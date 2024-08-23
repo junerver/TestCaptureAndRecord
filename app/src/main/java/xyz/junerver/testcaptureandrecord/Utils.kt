@@ -2,10 +2,9 @@ package xyz.junerver.testcaptureandrecord
 
 import android.app.Activity
 import android.content.Context
-import android.media.projection.MediaProjectionManager
-import android.content.Intent
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
+import android.media.projection.MediaProjectionManager
 
 /**
  * Description:

@@ -19,7 +19,7 @@ import android.view.WindowManager;
 import java.nio.ByteBuffer;
 
 import xyz.junerver.testcaptureandrecord.GlobalThreadPools;
-import xyz.junerver.testcaptureandrecord.LogUtils;
+import xyz.junerver.testcaptureandrecord.utils.LogUtils;
 import xyz.junerver.testcaptureandrecord.OnBitmapAvailableListener;
 
 /**

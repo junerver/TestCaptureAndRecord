@@ -1,17 +1,16 @@
 package xyz.junerver.testcaptureandrecord
 
 import android.app.Activity
-import android.app.AlertDialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.widget.Button
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import xyz.junerver.testcaptureandrecord.capture.CaptureScreen
 import xyz.junerver.testcaptureandrecord.record.RecordWithServerActivity
+import xyz.junerver.testcaptureandrecord.utils.LogUtils
+import xyz.junerver.testcaptureandrecord.utils.WebSocketConfig
+import xyz.junerver.testcaptureandrecord.utils.WebSocketHelper
 
 class MainActivity : AppCompatActivity() {
     lateinit var mIvPreview: ImageView
@@ -45,6 +44,9 @@ class MainActivity : AppCompatActivity() {
 
         //申请录屏权限
         Utils.createPermission(this)
+
+        // ws 连接
+        runCatching { WebSocketHelper.connect("ws:// ${WebSocketConfig.LOCAL_WS_PORT}") }
     }
 
 

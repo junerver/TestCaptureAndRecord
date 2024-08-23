@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import xyz.junerver.testcaptureandrecord.*
+import xyz.junerver.testcaptureandrecord.utils.LogUtils
 import kotlin.experimental.and
 
 class RecordService : LifecycleService() {

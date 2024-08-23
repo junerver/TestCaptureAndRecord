@@ -1,6 +1,8 @@
 package xyz.junerver.testcaptureandrecord.record
 
 import android.media.MediaCodec
+import android.media.MediaCodecInfo
+import android.media.MediaFormat
 import android.os.Bundle
 import android.view.Surface
 import android.view.SurfaceHolder
@@ -10,18 +12,26 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import xyz.junerver.testcaptureandrecord.*
+import xyz.junerver.testcaptureandrecord.GlobalConfig
+import xyz.junerver.testcaptureandrecord.MIME_TYPE
+import xyz.junerver.testcaptureandrecord.R
+import xyz.junerver.testcaptureandrecord.Utils
+import xyz.junerver.testcaptureandrecord.utils.BrocastUtil
+import xyz.junerver.testcaptureandrecord.utils.LogUtils
+import xyz.junerver.testcaptureandrecord.utils.WebSocketHelper
 import kotlin.experimental.and
+
 /**
-* Description: 抽离了录屏服务到server中
-* @author Junerver
-* @date: 2022/6/27-16:59
-* @Email: junerver@gmail.com
-* @Version: v1.0
-*/
+ * Description: 抽离了录屏服务到server中
+ * @author Junerver
+ * @date: 2022/6/27-16:59
+ * @Email: junerver@gmail.com
+ * @Version: v1.0
+ */
 class RecordWithServerActivity : AppCompatActivity() {
 
     private lateinit var mSvPreview: SurfaceView
+
     //输出录屏使用的Surface
     lateinit var mOutputSurface: Surface
     private lateinit var holder: SurfaceHolder
@@ -30,6 +40,7 @@ class RecordWithServerActivity : AppCompatActivity() {
 
     //视频解码器
     private lateinit var mMediaCodecDecoder: MediaCodec
+
     //视频解码器的输入缓冲区
     private val mDecoderOutputBufferInfo = MediaCodec.BufferInfo()
 
@@ -45,6 +56,8 @@ class RecordWithServerActivity : AppCompatActivity() {
                 mOutputSurface = holder.surface
                 //初始化视频解码器
                 initMediaDecoder()
+                val err = "lalalall".toByteArray()
+                decodeVideo(err)
             }
 
             override fun surfaceChanged(
@@ -62,10 +75,10 @@ class RecordWithServerActivity : AppCompatActivity() {
         mBtnStopRecord = findViewById(R.id.btn_stop_record)
 
 
-        RecordService.init(GlobalConfig.resultCode,GlobalConfig.intent!!)
+        RecordService.init(GlobalConfig.resultCode, GlobalConfig.intent!!)
         lifecycleScope.launch {
             launch(Dispatchers.IO) {
-                RecordService.sH264DataFlow.collect{
+                RecordService.sH264DataFlow.collect {
 //                找到开始码之后，使用开始码之后的第一个字节的低 5 位判断
 //                type &0x1f==0x7表示这个nalu是sps， 序列参数集 SPS----7
 //                type &0x1f==0x8表示是pps。 图像参数集 PPS----8：
@@ -73,7 +86,7 @@ class RecordWithServerActivity : AppCompatActivity() {
 //                P帧 ----1：
 //                https://zhuanlan.zhihu.com/p/281176576
 
-                    val frame = when((it[4] and 0x1f).toInt()){
+                    val frame = when ((it[4] and 0x1f).toInt()) {
                         7 -> "SPS"
                         8 -> "PPS"
                         5 -> "I"
@@ -94,6 +107,18 @@ class RecordWithServerActivity : AppCompatActivity() {
         mBtnStopRecord.setOnClickListener {
             RecordService.stop(this)
         }
+        WebSocketHelper.addObserver(object : WebSocketHelper.Observer {
+            override fun onReceive(data: String) {
+
+            }
+
+            override fun onReceive(data: ByteArray) {
+                BrocastUtil.processH264WithReceiver(data) {
+                    decodeVideo(it)
+                }
+            }
+
+        })
     }
 
     var hasI = false
@@ -108,17 +133,26 @@ class RecordWithServerActivity : AppCompatActivity() {
     private fun initMediaDecoder() {
         LogUtils.d("initDecoder")
         mMediaCodecDecoder = MediaCodec.createDecoderByType(MIME_TYPE)
-        val mediaFormat = Utils.getMediaFormat()
+        val mediaFormat1 = Utils.getMediaFormat()
+        val mediaFormat = MediaFormat.createVideoFormat("video/avc", 1280, 720)
+        mediaFormat.setInteger(
+            MediaFormat.KEY_COLOR_FORMAT,
+            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar
+        )
         mMediaCodecDecoder.configure(mediaFormat, mOutputSurface, null, 0)
         mMediaCodecDecoder.start()
+        LogUtils.d("解码器格式：\n$mediaFormat")
     }
 
     //解码视频数据
     private fun decodeVideo(chunk: ByteArray) {
-//        LogUtils.d("@解码视频数据 ${chunk.size}")
+        LogUtils.d(
+            "@解码视频数据 ${chunk.size} " +
+                    "\nisAvcEncodedBlock:${BrocastUtil.isAvcEncodedBlock(chunk)}"
+        )
         //出队输入缓冲区索引
         val inputBufferIndex = mMediaCodecDecoder.dequeueInputBuffer(100_000)
-//        LogUtils.d("@解码视频数据 inputBufferIndex $inputBufferIndex")
+        LogUtils.d("@解码视频数据 inputBufferIndex $inputBufferIndex")
         //当输入缓冲区有效时,就是索引值>=0
         if (inputBufferIndex >= 0) {
             //从解码器中获取输入缓冲区

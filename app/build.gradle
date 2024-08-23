@@ -48,4 +48,7 @@ dependencies {
     //协程扩展
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.1"
     implementation 'androidx.lifecycle:lifecycle-service:2.4.1'
+
+    //java-websocket  https://github.com/TooTallNate/Java-WebSocket
+    implementation "org.java-websocket:Java-WebSocket:1.5.2"
 }

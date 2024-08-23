@@ -1,7 +1,6 @@
-package xyz.junerver.testcaptureandrecord
+package xyz.junerver.testcaptureandrecord.utils
 
 import android.util.Log
-import xyz.junerver.testcaptureandrecord.LogUtils
 
 /**
  * Description:
@@ -21,5 +20,10 @@ object LogUtils {
     @JvmStatic
     fun e(msg: String?) {
         Log.e(TAG, msg!!)
+    }
+
+    @JvmStatic
+    fun i(msg: String?) {
+        Log.i(TAG, msg!!)
     }
 }
